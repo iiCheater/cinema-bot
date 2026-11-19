@@ -23,6 +23,32 @@ def scene():
     return movies
 
 
+def vox():
+    # موقع VOX نفسه: بيظهر عليه الفيلم أول ما الحجز يفتح
+    url = "https://egy.voxcinemas.com/movies/whatson"
+    soup = get(url)
+    movies = {}
+    for a in soup.select('h3 a[href*="/movies/"]') or soup.select('a[href*="/movies/"]'):
+        link = urljoin(url, a["href"])
+        name = a.get_text(strip=True)
+        if name and "#" not in link and not link.endswith(("whatson", "comingsoon")):
+            movies.setdefault(link, (name, link))
+    return movies
+
+
+def renaissance():
+    url = "https://rnscinemas.com/en"
+    movies = {}
+    for a in get(url).select('a[href*="/movie/"]'):
+        link = urljoin(url, a["href"]).split("#")[0].split("?")[0].rstrip("/")
+        slug = link.rsplit("/", 1)[-1]
+        img = a.find("img")
+        name = (img.get("alt", "").strip() if img else "") or slug.replace("-", " ").title()
+        if slug and (link not in movies or img):
+            movies[link] = (name, link)
+    return movies
+
+
 def elcinema():
     # كل الأفلام المعروضة في سينمات مصر (VOX, Galaxy, Premiere, ...)
     movies = {}
@@ -44,6 +70,8 @@ def elcinema():
 # (الاسم اللي يظهر في الرسالة، علامة تميّز لينكات المصدر، الدالة)
 SOURCES = [
     ("Scene Cinemas CFC", "/movie-details/", scene),
+    ("VOX Cinemas", "voxcinemas.com", vox),
+    ("Renaissance Cinemas", "rnscinemas.com", renaissance),
     ("سينمات مصر (elcinema)", "elcinema.com", elcinema),
 ]
 
