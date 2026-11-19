@@ -26,7 +26,10 @@ def scene():
 def vox():
     # موقع VOX نفسه: بيظهر عليه الفيلم أول ما الحجز يفتح
     url = "https://egy.voxcinemas.com/movies/whatson"
-    soup = get(url)
+    from curl_cffi import requests as cr
+    r = cr.get(url, impersonate="chrome", timeout=30)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
     movies = {}
     for a in soup.select('h3 a[href*="/movies/"]') or soup.select('a[href*="/movies/"]'):
         link = urljoin(url, a["href"])
